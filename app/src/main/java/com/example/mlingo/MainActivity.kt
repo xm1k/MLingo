@@ -91,17 +91,11 @@ fun loadQuestionsFromJson(context: Context): List<Question> {
     val type = object : TypeToken<List<Question>>() {}.type
     val questions: List<Question> = Gson().fromJson<List<Question>?>(reader, type).shuffled()
 
-    // Перемешиваем options для каждого вопроса
     questions.forEach { question ->
-        // Преобразуем options в MutableList, чтобы можно было использовать shuffle
         val mutableOptions = question.options.toMutableList()
-        val correctAnswer = mutableOptions[question.correctAnswerIndex] // Сохраняем правильный ответ
-        mutableOptions.shuffle()  // Перемешиваем варианты ответов
-
-        // Обновляем options с перемешанными вариантами
+        val correctAnswer = mutableOptions[question.correctAnswerIndex]
+        mutableOptions.shuffle()
         question.options = mutableOptions
-
-        // Обновляем правильный индекс ответа после перемешивания
         question.correctAnswerIndex = mutableOptions.indexOf(correctAnswer)
     }
 
@@ -131,20 +125,19 @@ fun SplashScreen(navController: NavController) {
     var text by remember { mutableStateOf("") }
     val fullText = "Created by xm1k"
 
-    // Анимация печати текста
     LaunchedEffect(Unit) {
         for (i in fullText.indices) {
-            delay(70) // Задержка между буквами
+            delay(70)
             text += fullText[i]
         }
-        delay(1500)  // Задержка после завершения печати
-        navController.navigate("menu_screen")  // Переход к экрану меню
+        delay(1500)
+        navController.navigate("menu_screen")
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF121212)), // Цвет фона
+            .background(Color(0xFF121212)),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -163,10 +156,10 @@ fun MyApp() {
 
     NavHost(navController = navController, startDestination = "splash_screen") {
         composable("splash_screen") {
-            SplashScreen(navController) // Экран заставки
+            SplashScreen(navController)
         }
         composable("menu_screen") {
-            MenuScreen() // Экран меню
+            MenuScreen()
         }
     }
 }
@@ -191,29 +184,24 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MenuScreen() {
     val context = LocalContext.current
-    // Состояние для перехода между экранами
     var isQuizStarted by remember { mutableStateOf(false) }
-    var selectedOption by remember { mutableStateOf(16) } // Выбранный вариант, по умолчанию 16
+    var selectedOption by remember { mutableStateOf(16) }
 
-    // Состояния для статистики
     val statsState = remember { mutableStateOf<Map<String, Any>?>(null) }
-    val codeText = remember { mutableStateOf("") } // Текст для анимации печати
+    val codeText = remember { mutableStateOf("") }
 
-    // Загрузка статистики
     LaunchedEffect(Unit) {
         delay(150)
-        val stats = loadStatsFromJson(context) // Загружаем данные
-        statsState.value = stats // Сохраняем в состояние
+        val stats = loadStatsFromJson(context)
+        statsState.value = stats
     }
 
     LaunchedEffect(statsState.value) {
-        // Если статистика изменилась, обновляем экран
         statsState.value?.let { stats ->
             Log.d("Updated Stats", "Stats updated: $stats")
         }
     }
 
-    // Зацикленная анимация текста
     LaunchedEffect(Unit) {
         val codeLines = listOf(
             "Initializing neural network with batch size of ${selectedOption}...",
@@ -245,35 +233,35 @@ fun MenuScreen() {
 
         var currentLine = 0
         while (true) {
-            codeText.value = "" // Сбросим текст перед новым циклом
+            codeText.value = ""
             codeLines[currentLine].forEachIndexed { index, char ->
-                delay(100) // Интервал между буквами
+                delay(100)
                 codeText.value += char
             }
-            delay(1000) // Пауза после завершения строки
-            currentLine = (currentLine + 1) % codeLines.size // Переход к следующей строке
+            delay(1000)
+            currentLine = (currentLine + 1) % codeLines.size
         }
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF121212)) // Фон как в QuizScreen
+            .background(Color(0xFF121212))
     ) {
         if (!isQuizStarted) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally, // Выровняем весь текст к началу
-                verticalArrangement = Arrangement.Top // Переместим текст наверх
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
             ) {
                 Text(
                     text = buildAnnotatedString {
-                        withStyle(style = SpanStyle(color = Color(0xFF3EB489))) { // Зеленый цвет для первых двух букв
+                        withStyle(style = SpanStyle(color = Color(0xFF3EB489))) {
                             append("ML")
                         }
-                        withStyle(style = SpanStyle(color = Color.White)) { // Белый цвет для остальных букв
+                        withStyle(style = SpanStyle(color = Color.White)) {
                             append("ingo")
                         }
                     },
@@ -296,10 +284,9 @@ fun MenuScreen() {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Кнопки с вариантами
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceAround // Сдвинуть кнопки
+                    horizontalArrangement = Arrangement.SpaceAround
                 ) {
                     listOf(8, 16, 32).forEach { option ->
                         Column(
@@ -307,11 +294,11 @@ fun MenuScreen() {
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(64.dp) // Квадратная форма кнопки
+                                    .size(64.dp)
                                     .border(
                                         width = 2.dp,
                                         color = if (selectedOption == option) Color.White else Color.Gray,
-                                        shape = RoundedCornerShape(0.dp) // Прямоугольная форма
+                                        shape = RoundedCornerShape(0.dp)
                                     )
                                     .clickable { selectedOption = option },
                                 contentAlignment = Alignment.Center
@@ -331,13 +318,12 @@ fun MenuScreen() {
                 Spacer(modifier = Modifier.height(24.dp))
 
                 val padding = 25.dp
-// Отображение статистики
                 statsState.value?.let { stats ->
                     Text(
                         text = "Total epochs: ${stats["totalTrainings"]}",
                         color = Color.White,
                         fontSize = 16.sp,
-                        modifier = Modifier.padding(start = padding).align(Alignment.Start), // Добавляем отступ
+                        modifier = Modifier.padding(start = padding).align(Alignment.Start),
                         style = TextStyle(fontFamily = Nothing)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -345,7 +331,7 @@ fun MenuScreen() {
                         text = "Average Loss: ${stats["averageLoss"]}",
                         color = Color.White,
                         fontSize = 16.sp,
-                        modifier = Modifier.padding(start = padding).align(Alignment.Start), // Добавляем отступ
+                        modifier = Modifier.padding(start = padding).align(Alignment.Start),
                         style = TextStyle(fontFamily = Nothing)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -353,7 +339,7 @@ fun MenuScreen() {
                         text = "Last Accuracy: ${stats["lastTrainingAccuracy"]}",
                         color = Color.White,
                         fontSize = 16.sp,
-                        modifier = Modifier.padding(start = padding).align(Alignment.Start), // Добавляем отступ
+                        modifier = Modifier.padding(start = padding).align(Alignment.Start),
                         style = TextStyle(fontFamily = Nothing)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -361,14 +347,13 @@ fun MenuScreen() {
                         text = "Time Spent: ${stats["timeSpent"]}",
                         color = Color.White,
                         fontSize = 16.sp,
-                        modifier = Modifier.padding(start = padding).align(Alignment.Start), // Добавляем отступ
+                        modifier = Modifier.padding(start = padding).align(Alignment.Start),
                         style = TextStyle(fontFamily = Nothing)
                     )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Печать строки кода
                 Text(
                     text = codeText.value,
                     color = Color.Green,
@@ -402,7 +387,6 @@ fun MenuScreen() {
                 )
             }
         } else {
-            // Переход к экрану викторины, передаем количество вопросов
             QuizScreen(questionCount = selectedOption)
         }
     }
@@ -413,7 +397,6 @@ suspend fun loadStatsFromJson(context: Context): Map<String, Any> = withContext(
     val file = File(context.filesDir, "stats.json")
 
     if (!file.exists()) {
-        // Если файла нет, создаем его с нулевыми значениями
         val initialStats = JSONObject().apply {
             put("total_trainings", 0)
             put("average_loss", 0f)
@@ -450,36 +433,24 @@ suspend fun saveToJson(
     accuracy: Float,
     elapsedTimeSeconds: Long
 ) = withContext(Dispatchers.IO) {
-    // Загружаем старые метрики
     val stats = loadStatsFromJson(context)
     val acc = 1-accuracy
-    // Получаем старые значения
     val totalTrainings = stats["totalTrainings"] as Int
     val averageLoss = stats["averageLoss"] as Float
     val lastTrainingAccuracy = stats["lastTrainingAccuracy"] as Float
     val timeSpent = stats["timeSpent"] as Float
 
-    // Обновляем метрики
     val newTotalTrainings = totalTrainings + 1
     val newAverageLoss = (averageLoss * totalTrainings + (1 - acc)) / newTotalTrainings
     val newLastTrainingAccuracy = acc
     val newTimeSpent = timeSpent + elapsedTimeSeconds
 
-    // Создаем новый JSON-объект с обновленными метриками
     val updatedStats = JSONObject().apply {
         put("total_trainings", newTotalTrainings)
         put("average_loss", newAverageLoss)
         put("last_training_accuracy", newLastTrainingAccuracy)
         put("time_spent", newTimeSpent) // время в секундах
     }
-//    val updatedStats = JSONObject().apply {
-//        put("total_trainings", 0)
-//        put("average_loss", 0.0f)
-//        put("last_training_accuracy", 0.0f)
-//        put("time_spent", 0.0f) // время в секундах
-//    }
-
-    // Сохраняем обновленный JSON в файл
     context.openFileOutput("stats.json", Context.MODE_PRIVATE).use { output ->
         output.write(updatedStats.toString().toByteArray())
         Log.d("SaveToJson", "Stats saved successfully.")
@@ -490,30 +461,26 @@ suspend fun saveToJson(
 fun QuizScreen(questionCount: Int) {
     val context = LocalContext.current
 
-    // Загрузка только необходимого количества вопросов
     var questions by remember { mutableStateOf(loadQuestionsFromJson(context).take(questionCount)) }
-    var currentQuestionIndex by remember { mutableStateOf(0) } // Индекс текущего вопроса
-    var answeredQuestionsCount by remember { mutableStateOf(0) } // Количество вопросов, на которые ответили
-    var correctAnswersCount by remember { mutableStateOf(0) } // Количество правильных ответов
-    var selectedAnswer by remember { mutableStateOf<Int?>(null) } // Выбранный ответ
-    var isAnswerCorrect by remember { mutableStateOf<Boolean?>(null) } // Правильность ответа
-    var explanation by remember { mutableStateOf("") } // Объяснение для неправильного ответа
-    var isAnswerSelected by remember { mutableStateOf(false) } // Флаг выбора ответа
-    var isQuizFinished by remember { mutableStateOf(false) } // Завершение викторины
+    var currentQuestionIndex by remember { mutableStateOf(0) }
+    var answeredQuestionsCount by remember { mutableStateOf(0) }
+    var correctAnswersCount by remember { mutableStateOf(0) }
+    var selectedAnswer by remember { mutableStateOf<Int?>(null) }
+    var isAnswerCorrect by remember { mutableStateOf<Boolean?>(null) }
+    var explanation by remember { mutableStateOf("") }
+    var isAnswerSelected by remember { mutableStateOf(false) }
+    var isQuizFinished by remember { mutableStateOf(false) }
 
     val totalQuestions = questions.size
     val currentQuestion = questions[currentQuestionIndex]
 
-    // Время начала викторины
     val startTime = remember { System.currentTimeMillis() }
 
-    // Плавная анимация для прогресса
     val progress by animateFloatAsState(
         targetValue = (answeredQuestionsCount.toFloat() / totalQuestions.toFloat()) * 100,
         animationSpec = tween(durationMillis = 1000)
     )
 
-    // Плавная анимация для точности
     val accuracy by animateFloatAsState(
         targetValue = if (answeredQuestionsCount > 0) {
             (correctAnswersCount.toFloat() / answeredQuestionsCount) * 100
@@ -521,7 +488,6 @@ fun QuizScreen(questionCount: Int) {
         animationSpec = tween(durationMillis = 1000)
     )
 
-    // Loss (условно: 1 - accuracy)
     val loss by animateFloatAsState(
         targetValue = if (answeredQuestionsCount > 0) {
             1 - (correctAnswersCount.toFloat() / answeredQuestionsCount)
@@ -529,7 +495,6 @@ fun QuizScreen(questionCount: Int) {
         animationSpec = tween(durationMillis = 1000)
     )
 
-    // Precision и Recall
     val precision by animateFloatAsState(
         targetValue = if (answeredQuestionsCount > 0) {
             correctAnswersCount.toFloat() / answeredQuestionsCount
@@ -544,7 +509,6 @@ fun QuizScreen(questionCount: Int) {
         animationSpec = tween(durationMillis = 1000)
     )
 
-    // F1-Score
     val f1Score by animateFloatAsState(
         targetValue = if (precision + recall > 0) {
             2 * (precision * recall) / (precision + recall)
@@ -552,22 +516,20 @@ fun QuizScreen(questionCount: Int) {
         animationSpec = tween(durationMillis = 1000)
     )
 
-    // Функция для вибрации
     fun vibrateOnAnswer(isCorrect: Boolean) {
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             val vibrationEffect = if (isCorrect) {
-                VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE) // Короткая вибрация для правильного ответа
+                VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE)
             } else {
-                VibrationEffect.createOneShot(70, VibrationEffect.DEFAULT_AMPLITUDE) // Длительная вибрация для неправильного ответа
+                VibrationEffect.createOneShot(70, VibrationEffect.DEFAULT_AMPLITUDE)
             }
             vibrator.vibrate(vibrationEffect)
         } else {
-            vibrator.vibrate(100) // Короткая вибрация для старых версий
+            vibrator.vibrate(100)
         }
     }
 
-    // Проверка ответа
     fun checkAnswer(answerIndex: Int) {
         if (!isAnswerSelected) {
             selectedAnswer = answerIndex
@@ -576,10 +538,8 @@ fun QuizScreen(questionCount: Int) {
             explanation = if (isCorrect) "" else currentQuestion.explanation
             isAnswerSelected = true
 
-            // Вибрация
             vibrateOnAnswer(isCorrect)
 
-            // Увеличиваем прогресс
             answeredQuestionsCount += 1
             if (isCorrect) {
                 correctAnswersCount += 1
@@ -587,7 +547,6 @@ fun QuizScreen(questionCount: Int) {
         }
     }
 
-    // Переход к следующему вопросу
     fun nextQuestion() {
         if (currentQuestionIndex < totalQuestions - 1) {
             currentQuestionIndex += 1
@@ -596,15 +555,14 @@ fun QuizScreen(questionCount: Int) {
             explanation = ""
             isAnswerSelected = false
         } else {
-            isQuizFinished = true // Завершаем викторину
+            isQuizFinished = true
         }
     }
 
-    // LaunchedEffect для сохранения метрик после завершения викторины
     LaunchedEffect(isQuizFinished) {
         if (isQuizFinished) {
             val endTime = System.currentTimeMillis()
-            val elapsedTime = (endTime - startTime) / 1000 // Время в секундах
+            val elapsedTime = (endTime - startTime) / 1000
 
             val calculatedAccuracy = if (answeredQuestionsCount > 0) {
                 (correctAnswersCount.toFloat() / answeredQuestionsCount) * 100
@@ -613,7 +571,6 @@ fun QuizScreen(questionCount: Int) {
                 1 - (correctAnswersCount.toFloat() / answeredQuestionsCount)
             } else 1f
 
-            // Сохранение метрик
             saveToJson(context, calculatedAccuracy, calculatedLoss, elapsedTime)
         }
     }
@@ -623,19 +580,15 @@ fun QuizScreen(questionCount: Int) {
             .fillMaxSize()
             .background(Color(0xFF121212))
     ) {
-        // Если викторина завершена, показываем финальный результат
         if (isQuizFinished) {
             MenuScreen()
         } else {
-            // Прогресс-бар в верхней части экрана
             Column {
-                // Прогресс-бар
                 LinearProgressBar(
                     totalQuestions = totalQuestions,
-                    currentQuestionIndex = answeredQuestionsCount // Обновляем прогресс
+                    currentQuestionIndex = answeredQuestionsCount
                 )
 
-                // Точность и метрики
                 MLStatsDisplay(
                     accuracy = accuracy,
                     loss = loss,
@@ -644,7 +597,6 @@ fun QuizScreen(questionCount: Int) {
                 )
             }
 
-            // Вопрос и варианты ответов
             Column(
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -655,7 +607,6 @@ fun QuizScreen(questionCount: Int) {
                 TypingText(fullText = currentQuestion.question)
             }
 
-            // Панель результатов при выборе ответа
             if (selectedAnswer != null) {
                 Column(
                     modifier = Modifier
@@ -673,7 +624,6 @@ fun QuizScreen(questionCount: Int) {
                 }
             }
 
-            // Кнопки выбора ответа
             val screenHeight = LocalConfiguration.current.screenHeightDp.dp
             val panelHeight = screenHeight * 0.20f
 
@@ -781,28 +731,26 @@ fun MLStatsDisplay(
 
 @Composable
 fun LinearProgressBar(totalQuestions: Int, currentQuestionIndex: Int) {
-    // Рассчитываем процент пройденных вопросов
     val progress = (currentQuestionIndex.toFloat() / totalQuestions.toFloat()) * 100
-    val filledSquares = (progress / 5).toInt() // Каждый квадрат - 5%
+    val filledSquares = (progress / 5).toInt()
 
-    // Плавное изменение прогресса с анимацией
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
-        animationSpec = tween(durationMillis = 1000) // Плавное изменение за 1 секунду
+        animationSpec = tween(durationMillis = 1000)
     )
 
     val filledAnimatedSquares = (animatedProgress / 5).toInt()
 
     Box(
         modifier = Modifier
-            .fillMaxWidth() // Гарантируем, что Box занимает всю ширину
+            .fillMaxWidth()
             .height(40.dp)
             .padding(8.dp, top = 16.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier
-                .align(Alignment.Center) // Центрирование Row по горизонтали
+                .align(Alignment.Center)
         ) {
             repeat(20) { index ->
                 Box(
@@ -816,12 +764,11 @@ fun LinearProgressBar(totalQuestions: Int, currentQuestionIndex: Int) {
             }
         }
 
-        // Текст с процентом пройденного прогресса, сдвигаем его влево
         Text(
             text = "${animatedProgress.toInt()}%",
             color = Color.White,
             modifier = Modifier
-                .align(Alignment.CenterStart) // Центрирование текста слева
+                .align(Alignment.CenterStart)
                 .padding(start = 16.dp),
             fontSize = 16.sp,
             style = TextStyle(fontFamily = Nothing)
@@ -871,7 +818,7 @@ fun ResultPanel(
                         onDragEnd = {
                             if (offsetX < -screenWidth.value * 0.25f) {
                                 offsetX = 0f
-                                onSwipeNext() // Переход к следующему вопросу
+                                onSwipeNext()
                             } else {
                                 offsetX = 0f
                             }
